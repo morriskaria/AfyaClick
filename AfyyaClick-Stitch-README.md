@@ -280,3 +280,4 @@ When generating the UI for AfyyaClick using this specification:
 6. **Status Communication**: Use clear visual indicators for appointment statuses and system states
 
 This comprehensive specification should enable Stitch to generate a complete, production-ready healthcare management interface that meets both user needs and industry standards.
+this is a system 
