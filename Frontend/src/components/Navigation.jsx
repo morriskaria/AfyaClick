@@ -2,71 +2,72 @@
 
 const Navigation = ({ currentUser, activeTab, setActiveTab }) => {
   const patientNavItems = [
-    { id: 'book-appointment', icon: 'calendar_add_on', label: 'Book' },
-    { id: 'my-appointments', icon: 'calendar_today', label: 'Appts' },
-    { id: 'my-records', icon: 'description', label: 'Records' },
-    { id: 'dashboard', icon: 'space_dashboard', label: 'Home' },
+    { id: 'dashboard', icon: 'dashboard', label: 'Dashboard' },
+    { id: 'book-appointment', icon: 'calendar_today', label: 'Book Appointment' },
+    { id: 'my-appointments', icon: 'event', label: 'My Appointments' },
+    { id: 'my-records', icon: 'clinical_notes', label: 'Medical Records' },
   ];
 
   const doctorNavItems = [
-    { id: 'dashboard', icon: 'grid_view', label: 'Dashboard' },
-    { id: 'add-record', icon: 'add', label: 'Add', isFab: true },
-    { id: 'view-records', icon: 'people', label: 'Patients' },
-    { id: 'doctor-appointments', icon: 'calendar_today', label: 'Schedule' },
+    { id: 'dashboard', icon: 'dashboard', label: 'Dashboard' },
+    { id: 'doctor-appointments', icon: 'calendar_today', label: 'Appointments' },
+    { id: 'view-records', icon: 'group', label: 'Patients' },
+    { id: 'add-record', icon: 'add_box', label: 'Add Record' },
   ];
 
   const navItems = currentUser.role === 'patient' ? patientNavItems : doctorNavItems;
 
   return (
-    <nav className="fixed bottom-0 left-0 z-50 w-full bg-surface-light dark:bg-surface-dark border-t border-gray-200 dark:border-gray-800 pb-safe">
-      <div className="grid h-16 max-w-lg grid-cols-4 mx-auto font-medium">
-        {navItems.map((item) => {
-          if (item.isFab) {
-            return (
-              <div key={item.id} className="relative -top-6">
-                <button
-                  onClick={() => setActiveTab(item.id)}
-                  className={`flex h-14 w-14 items-center justify-center rounded-full ${
-                    activeTab === item.id
-                      ? 'bg-dark-text dark:bg-white text-white dark:text-black'
-                      : 'bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300'
-                  } shadow-lg hover:scale-105 transition-all`}
-                >
-                  <span className="material-symbols-outlined text-[28px]">{item.icon}</span>
-                </button>
-              </div>
-            );
-          }
+    <aside className="w-64 bg-white dark:bg-slate-900 border-r border-[#dae0e7] flex flex-col justify-between h-full">
+      <div className="p-6">
+        {/* Logo */}
+        <div className="flex items-center gap-3 mb-10 text-primary">
+          <div className="size-8">
+            <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
+            </svg>
+          </div>
+          <h2 className="text-xl font-black tracking-tight">AfyyaClick</h2>
+        </div>
 
-          return (
-            <button
+        {/* Navigation Links */}
+        <nav className="space-y-1">
+          {navItems.map((item) => (
+            <a
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 ${
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors cursor-pointer ${
                 activeTab === item.id
-                  ? 'text-primary'
-                  : 'text-gray-500 dark:text-gray-400'
-              } group transition-colors`}
-              type="button"
+                  ? 'bg-primary/10 text-primary font-semibold'
+                  : 'text-[#5e758d] hover:bg-slate-50'
+              }`}
+              onClick={() => setActiveTab(item.id)}
             >
-              <span className={`material-symbols-outlined text-[24px] mb-1 ${
-                activeTab === item.id ? 'filled' : ''
-              } group-hover:text-primary dark:group-hover:text-primary`}>
-                {item.icon}
-              </span>
-              <span className={`text-xs group-hover:text-primary dark:group-hover:text-primary ${
-                activeTab === item.id ? 'text-primary' : ''
-              }`}>
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
+              <span className="material-symbols-outlined">{item.icon}</span>
+              <span className="text-sm">{item.label}</span>
+            </a>
+          ))}
+          
+          {/* Settings Link */}
+          <a
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#5e758d] hover:bg-slate-50 transition-colors cursor-pointer"
+            onClick={() => {}}
+          >
+            <span className="material-symbols-outlined">settings</span>
+            <span className="text-sm font-medium">Settings</span>
+          </a>
+        </nav>
       </div>
-      {/* Safe area padding for bottom nav (usually handled by OS, simulated here) */}
-      <div className="h-6 w-full bg-surface-light dark:bg-surface-dark fixed bottom-0 left-0 z-40"></div>
-    </nav>
+
+      {/* Emergency Alert Button */}
+      <div className="p-4 border-t border-[#dae0e7]">
+        <button className="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-lg font-bold text-sm tracking-wide shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
+          <span className="material-symbols-outlined text-[18px]">emergency</span>
+          Emergency Alert
+        </button>
+      </div>
+    </aside>
   );
 };
 
 export default Navigation;
+

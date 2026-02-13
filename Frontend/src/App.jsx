@@ -25,6 +25,7 @@ const App = () => {
   const [appointments, setAppointments] = useState([]);
   const [patientRecords, setPatientRecords] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Load initial data from backend
   useEffect(() => {
@@ -333,16 +334,27 @@ const App = () => {
     />;
   }
 
+  // Main app layout with sidebar
   return (
-    <div className="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white font-display antialiased min-h-screen pb-24">
-      <div className="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden">
-        <Header currentUser={currentUser} onLogout={handleLogout} />
-        <Navigation
-          currentUser={currentUser}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
+    <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark">
+      {/* Sidebar Navigation */}
+      <Navigation 
+        currentUser={currentUser} 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+      />
+      
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <Header 
+          currentUser={currentUser} 
+          onLogout={handleLogout}
+          onSearch={setSearchQuery}
         />
-        <main className="flex-1 overflow-y-auto">
+        
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-y-auto p-8">
           <Dashboard
             activeTab={activeTab}
             currentUser={currentUser}
@@ -352,6 +364,7 @@ const App = () => {
             onBookAppointment={handleBookAppointment}
             onAddRecord={handleAddRecord}
             onUpdateAppointmentStatus={updateAppointmentStatus}
+            searchQuery={searchQuery}
           />
         </main>
       </div>
@@ -360,3 +373,4 @@ const App = () => {
 };
 
 export default App;
+
