@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FileText, User, Stethoscope, FileCheck, ClipboardList } from 'lucide-react';
+import NoteAISummaryPanel from './NoteAISummaryPanel';
 
 const AddRecord = ({ patients, onAddRecord }) => {
   const [formData, setFormData] = useState({
@@ -8,10 +9,22 @@ const AddRecord = ({ patients, onAddRecord }) => {
     treatment: '',
     notes: ''
   });
+  const [showAIPanel, setShowAIPanel] = useState(false);
+  const [aiInterpretation, setAiInterpretation] = useState(null);
 
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleAIInterpretationApproved = (interpretation) => {
+    // When doctor approves AI interpretation, update form with summaries
+    setAiInterpretation(interpretation);
+    setFormData(prev => ({
+      ...prev,
+      diagnosis: interpretation.clinical_summary || prev.diagnosis,
+      notes: interpretation.formatted_note || prev.notes
+    }));
   };
 
   return (
@@ -98,18 +111,40 @@ const AddRecord = ({ patients, onAddRecord }) => {
             <div>
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-3">
                 <ClipboardList className="w-4 h-4 text-blue-600" />
-                Additional Notes
+                Additional Notes / Clinical Notes
               </label>
               <textarea
                 name="notes"
                 value={formData.notes}
                 onChange={handleChange}
                 required
-                placeholder="Add any additional observations or notes"
+                placeholder="Add any additional observations or notes (AI can interpret these)"
                 className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 text-gray-800 placeholder-gray-400 resize-none"
                 rows="4"
               />
+              {formData.notes.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAIPanel(!showAIPanel)}
+                  className="mt-3 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition-colors"
+                >
+                  {showAIPanel ? 'Hide AI Interpreter' : 'Use AI Interpreter'}
+                </button>
+              )}
             </div>
+
+            {/* AI Summary Panel */}
+            {showAIPanel && formData.notes && (
+              <div className="border-2 border-blue-200 rounded-xl p-4 bg-blue-50">
+                <NoteAISummaryPanel
+                  noteId={`note-${formData.patientId}-${Date.now()}`}
+                  rawNote={formData.notes}
+                  patientId={formData.patientId}
+                  doctorId="1"
+                  onApproved={handleAIInterpretationApproved}
+                />
+              </div>
+            )}
 
             {/* Submit Button */}
             <div className="pt-4">

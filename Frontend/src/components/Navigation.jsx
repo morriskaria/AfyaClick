@@ -21,13 +21,8 @@ const Navigation = ({ currentUser, activeTab, setActiveTab }) => {
     <aside className="w-64 bg-white dark:bg-slate-900 border-r border-[#dae0e7] flex flex-col justify-between h-full">
       <div className="p-6">
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-10 text-primary">
-          <div className="size-8">
-            <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
-            </svg>
-          </div>
-          <h2 className="text-xl font-black tracking-tight">AfyyaClick</h2>
+        <div className="flex items-center gap-3 mb-10">
+          <img src="/src/assets/Affyaclicklogo.png" alt="AfyaClick Logo" className="h-10 object-contain" />
         </div>
 
         {/* Navigation Links */}

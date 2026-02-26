@@ -1,15 +1,20 @@
 # app.py - UPDATED (no deprecated before_first_request)
-from flask import Flask, jsonify,request
+from flask import Flask, jsonify, request
 from flask_migrate import Migrate
 from flask_cors import CORS
+from ai_routes import ai_bp
+from ai_config import AIConfig, setup_audit_logging
 
 # Import from models
 from models import db, bcrypt, Patient, Doctor, Appointment
+from ai_models import NoteInterpretation, ChatSession, ChatMessage, AIAuditLog
 
 # Flask application object 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"])
-
+AIConfig.validate()
+setup_audit_logging()
+app.register_blueprint(ai_bp, url_prefix='/api/ai')
 # Configure database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///Afyyaclick.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

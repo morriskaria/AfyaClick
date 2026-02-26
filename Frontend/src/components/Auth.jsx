@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+
 
 // LoginForm Component
 const LoginForm = ({ onLogin, loading }) => {
@@ -349,13 +349,8 @@ const Auth = ({ activeTab, setActiveTab, onLogin, onRegister, loading }) => {
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12 lg:p-24 bg-white dark:bg-[#0f1923]">
         <div className="w-full max-w-md space-y-8">
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-            <div className="bg-[#007bff] p-2 rounded-lg">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                <path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z"></path>
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">AfyyaClick</h1>
+          <div className="lg:hidden flex items-center justify-center mb-8">
+            <img src="/src/assets/Affyaclicklogo.png" alt="AfyaClick Logo" className="h-16 object-contain" />
           </div>
           
           <div className="text-center lg:text-left">

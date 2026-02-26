@@ -6,6 +6,8 @@ import Navigation from './components/Navigation';
 import Dashboard from './components/Dashboard';
 import { api } from './services/api';
 import './app.css';
+import AfyaclickAssistantWidget from './components/AfyaclickAssistantWidget';
+
 
 // Map user roles to their default dashboard tab
 const getDefaultTabForRole = (role) => {
@@ -343,6 +345,7 @@ const App = () => {
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
       />
+      <AfyaclickAssistantWidget userRole={currentUser?.role} userId={currentUser?.id} />
       
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
