@@ -1,4 +1,4 @@
-
+import { useState } from 'react';
 
 // LoginForm Component
 const LoginForm = ({ onLogin, loading }) => {
@@ -6,18 +6,38 @@ const LoginForm = ({ onLogin, loading }) => {
     email: '',
     password: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onLogin(formData);
+    setError('');
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all fields.');
+      return;
+    }
+    try {
+      await onLogin(formData);
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.');
+    }
   };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError('');
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Error Message */}
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <span className="material-symbols-outlined text-lg">error</span>
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* Email Input */}
       <div className="space-y-2">
         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300" htmlFor="email">Email Address</label>
@@ -33,6 +53,7 @@ const LoginForm = ({ onLogin, loading }) => {
             onChange={handleChange}
             placeholder="dr.smith@hospital.com"
             disabled={loading}
+            required
             className="block w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#007bff]/20 focus:border-[#007bff] transition-all text-sm outline-none"
           />
         </div>
@@ -49,17 +70,25 @@ const LoginForm = ({ onLogin, loading }) => {
             <span className="material-symbols-outlined text-xl">lock</span>
           </div>
           <input
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             id="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
             placeholder="••••••••"
             disabled={loading}
+            required
             className="block w-full pl-11 pr-12 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#007bff]/20 focus:border-[#007bff] transition-all text-sm outline-none"
           />
-          <button className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600" type="button">
-            <span className="material-symbols-outlined text-xl">visibility</span>
+          <button
+            className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#007bff] transition-colors"
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+          >
+            <span className="material-symbols-outlined text-xl">
+              {showPassword ? 'visibility_off' : 'visibility'}
+            </span>
           </button>
         </div>
       </div>
@@ -78,7 +107,7 @@ const LoginForm = ({ onLogin, loading }) => {
       <button
         type="submit"
         disabled={loading}
-        className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-[#007bff] hover:bg-[#007bff]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#007bff] transition-all transform active:scale-[0.98]"
+        className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-[#007bff] hover:bg-[#007bff]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#007bff] transition-all transform active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {loading ? (
           <>
@@ -106,22 +135,48 @@ const RegisterForm = ({ onRegister, loading }) => {
     confirmPassword: '',
     role: 'patient'
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+    setError('');
+
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+      setError('Please fill in all required fields.');
       return;
     }
-    onRegister(formData);
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match. Please try again.');
+      return;
+    }
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+    try {
+      await onRegister(formData);
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    }
   };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError('');
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Error Message */}
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <span className="material-symbols-outlined text-lg">error</span>
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* Role Switcher */}
       <div className="space-y-2">
         <label className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Identify as</label>
@@ -168,6 +223,7 @@ const RegisterForm = ({ onRegister, loading }) => {
             onChange={handleChange}
             placeholder="John Doe"
             disabled={loading}
+            required
             className="block w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#007bff]/20 focus:border-[#007bff] transition-all text-sm outline-none"
           />
         </div>
@@ -188,6 +244,7 @@ const RegisterForm = ({ onRegister, loading }) => {
             onChange={handleChange}
             placeholder="name@example.com"
             disabled={loading}
+            required
             className="block w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#007bff]/20 focus:border-[#007bff] transition-all text-sm outline-none"
           />
         </div>
@@ -206,7 +263,7 @@ const RegisterForm = ({ onRegister, loading }) => {
             name="phone"
             value={formData.phone}
             onChange={handleChange}
-            placeholder="+1 (555) 123-4567"
+            placeholder="+254 7XX XXX XXX"
             disabled={loading}
             className="block w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#007bff]/20 focus:border-[#007bff] transition-all text-sm outline-none"
           />
@@ -221,17 +278,25 @@ const RegisterForm = ({ onRegister, loading }) => {
             <span className="material-symbols-outlined text-xl">lock</span>
           </div>
           <input
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             id="reg-password"
             name="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder="••••••••"
+            placeholder="Min. 6 characters"
             disabled={loading}
+            required
             className="block w-full pl-11 pr-12 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#007bff]/20 focus:border-[#007bff] transition-all text-sm outline-none"
           />
-          <button className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600" type="button">
-            <span className="material-symbols-outlined text-xl">visibility</span>
+          <button
+            className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#007bff] transition-colors"
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+          >
+            <span className="material-symbols-outlined text-xl">
+              {showPassword ? 'visibility_off' : 'visibility'}
+            </span>
           </button>
         </div>
       </div>
@@ -244,17 +309,25 @@ const RegisterForm = ({ onRegister, loading }) => {
             <span className="material-symbols-outlined text-xl">lock</span>
           </div>
           <input
-            type="password"
+            type={showConfirmPassword ? 'text' : 'password'}
             id="reg-confirm-password"
             name="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleChange}
-            placeholder="••••••••"
+            placeholder="Re-enter your password"
             disabled={loading}
+            required
             className="block w-full pl-11 pr-12 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-[#007bff]/20 focus:border-[#007bff] transition-all text-sm outline-none"
           />
-          <button className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600" type="button">
-            <span className="material-symbols-outlined text-xl">visibility</span>
+          <button
+            className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#007bff] transition-colors"
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+          >
+            <span className="material-symbols-outlined text-xl">
+              {showConfirmPassword ? 'visibility_off' : 'visibility'}
+            </span>
           </button>
         </div>
       </div>
@@ -263,7 +336,7 @@ const RegisterForm = ({ onRegister, loading }) => {
       <button
         type="submit"
         disabled={loading}
-        className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-[#007bff] hover:bg-[#007bff]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#007bff] transition-all transform active:scale-[0.98]"
+        className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-[#007bff] hover:bg-[#007bff]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#007bff] transition-all transform active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {loading ? (
           <>
@@ -288,7 +361,7 @@ const Auth = ({ activeTab, setActiveTab, onLogin, onRegister, loading }) => {
       {/* Left Side: Hero Image & Branding */}
       <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-between p-12 text-white overflow-hidden">
         {/* Background Image with Overlay */}
-        <div 
+        <div
           className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
           style={{
             backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuAJE_cBxgqhnznSF2ptsx93EwjnZqQg7MyRG4iyO3dftx9-yd533n5XgQOFvarDsr7M6YjwQXdR8qXJKKjNWs3mE3fyLTEpxNN3mf3VO54kyGQpYFbF8N82VhLbUFMbx5XW80HJAfOsISy_k70AJC2cBbTYb32FfAmoXG5FLSImmq9oCidrIBsZvg4r98fmWV3TzwB8byLZuWhJxI3kAViQOu4nVKo_3q4_iTPUgHqJ9TQfAJ5QyUXp1yYjHZkUp2ElPB21R5WaZeI')`
@@ -297,7 +370,7 @@ const Auth = ({ activeTab, setActiveTab, onLogin, onRegister, loading }) => {
           <div className="absolute inset-0 bg-[#007bff]/60 mix-blend-multiply"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#007bff]/80 to-transparent"></div>
         </div>
-        
+
         {/* Branding */}
         <div className="relative z-10 flex items-center gap-3">
           <div className="bg-white p-2 rounded-lg">
@@ -307,26 +380,26 @@ const Auth = ({ activeTab, setActiveTab, onLogin, onRegister, loading }) => {
           </div>
           <h1 className="text-2xl font-black tracking-tight">AfyyaClick</h1>
         </div>
-        
+
         {/* Tagline */}
         <div className="relative z-10 max-w-md">
           <h2 className="text-5xl font-extrabold leading-tight mb-6">Professional coordination for modern healthcare teams.</h2>
           <p className="text-lg text-white/90 font-medium">Streamlining patient care and clinical workflows with secure, real-time collaboration tools.</p>
-          
+
           <div className="mt-12 flex gap-4">
             <div className="flex -space-x-3">
-              <img 
-                className="h-10 w-10 rounded-full border-2 border-[#007bff] bg-gray-200" 
+              <img
+                className="h-10 w-10 rounded-full border-2 border-[#007bff] bg-gray-200"
                 alt="Profile photo of a female doctor"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3q4AtZFM0UZt3liOcOTYvlKgnMBB_Ifu1VAnbXtef4CuMq0CPCVjieKk0UQjodiQlNiNiFXd0PG25vqZBYuZS6tLUw-aDhY-wsqrz_anouRkchuWzt5oV63m9x1X33RPs0zEHWu6Govw1xOrTchTouByuznXQFDQPZ1r3qDKmguRo1H2xZDzlVvKkbUQI9oQ6NgbuvGAF9nBHqQEnWDw5ZIwv0MWkT-640CbY8KncKcoiBxHzd_PaPuu17oxVisQILTTQlCO31TQ"
               />
-              <img 
-                className="h-10 w-10 rounded-full border-2 border-[#007bff] bg-gray-200" 
+              <img
+                className="h-10 w-10 rounded-full border-2 border-[#007bff] bg-gray-200"
                 alt="Profile photo of a male doctor"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCAEXsOpemfbliV58_lQTAYeKctqlH4ZmdU2oPBrgtbXNXXuqcbGNRBRQ3ytfQT_nWp_610H5Ru60IqzPeN_8A_m9JGVvseMHbUecoe3iQMsGPupt1wcHft2bUQZS9LrbhZ4J0FilC1qcsLXqs7hOQoDjykFYTYqeSYx_B8JksIHVOpdogPrG3s71cgIlhwJ5zpe2_d85AAR8uPQwscjL43DfhrbbZXdGTy5lffFVPA-xh9FB9B6ZtBj8YksIGkl0kdDMA6FcTNEU"
               />
-              <img 
-                className="h-10 w-10 rounded-full border-2 border-[#007bff] bg-gray-200" 
+              <img
+                className="h-10 w-10 rounded-full border-2 border-[#007bff] bg-gray-200"
                 alt="Profile photo of a medical specialist"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOBiwA2ztnYWcTPgfeW-yDe---LwuCeeS64_r0rMaxyNg-5M384vGk0xWuBa-xekXUHOOgxh9U4H3zDW6GIrKJOa0oSwz1P4p8qsCqpqM2Ut3IyDXPBdgNUUzCVNC0YUFZUaze30zjrT9T82AerkzxCe74b9hsbnlCwt2Jcrh1ECk9qqfkRJz8MbxBs4MpzIQHV_a8RN8UBKHsPlOotE6UrWOx7WoimDzVnwwXXYHyptcnhhXCMTlEbS__k-JENP55KQI6l3dncaQ"
               />
@@ -337,7 +410,7 @@ const Auth = ({ activeTab, setActiveTab, onLogin, onRegister, loading }) => {
             </div>
           </div>
         </div>
-        
+
         {/* Footer Meta */}
         <div className="relative z-10 text-sm text-white/60 flex items-center gap-2">
           <span className="material-symbols-outlined text-sm">verified_user</span>
@@ -352,36 +425,40 @@ const Auth = ({ activeTab, setActiveTab, onLogin, onRegister, loading }) => {
           <div className="lg:hidden flex items-center justify-center mb-8">
             <img src="/src/assets/Affyaclicklogo.png" alt="AfyaClick Logo" className="h-16 object-contain" />
           </div>
-          
+
           <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Welcome Back</h2>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Access your clinical dashboard and patient records.</p>
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+              {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}
+            </h2>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              {activeTab === 'login'
+                ? 'Access your clinical dashboard and patient records.'
+                : 'Join thousands of healthcare professionals on AfyyaClick.'}
+            </p>
           </div>
-          
+
           {/* Tabs */}
           <div className="flex border-b border-gray-200 dark:border-gray-800">
-            <button 
+            <button
               onClick={() => setActiveTab('login')}
-              className={`flex-1 py-4 text-sm font-bold border-b-2 transition-colors ${
-                activeTab === 'login' 
-                  ? 'border-[#007bff] text-[#007bff]' 
+              className={`flex-1 py-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'login'
+                  ? 'border-[#007bff] text-[#007bff]'
                   : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
+                }`}
             >
               Login
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('register')}
-              className={`flex-1 py-4 text-sm font-bold border-b-2 transition-colors ${
-                activeTab === 'register' 
-                  ? 'border-[#007bff] text-[#007bff]' 
+              className={`flex-1 py-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'register'
+                  ? 'border-[#007bff] text-[#007bff]'
                   : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
+                }`}
             >
               Sign Up
             </button>
           </div>
-          
+
           {/* Auth Form */}
           {activeTab === 'login' ? (
             <LoginForm onLogin={onLogin} loading={loading} />
@@ -402,17 +479,17 @@ const Auth = ({ activeTab, setActiveTab, onLogin, onRegister, loading }) => {
           {/* SSO Buttons */}
           <div className="grid grid-cols-2 gap-4">
             <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-colors">
-              <img 
-                alt="Google Logo" 
-                className="h-5 w-5" 
+              <img
+                alt="Google Logo"
+                className="h-5 w-5"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuBioFiEqrIxrc3L_4DKoy6He4LNqdZm29xxGQkqQ3UxEcvElP5_xX6wPERaZYTV6R4mOvuQOeiN2VpmEHDyBfv3YOOT-iA8Ng-Sj1UWxfKC0QQ-NA1ZdBoE1is36ZdjdJ56-rA89F9-eKgCinDqmBomxemPRAXB2UZ6Rm2AAtnhKP4bNuPcJob299DHdNd7qF8CAcPq-K-xBTuLQr0qEdbsnbx-iFBBUC_JcEg_mml7b1b7ICoyvYpiV-mEQn3CKe9g-nOEw_a2OaY"
               />
               Google
             </button>
             <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-colors">
-              <img 
-                alt="Microsoft Logo" 
-                className="h-5 w-5" 
+              <img
+                alt="Microsoft Logo"
+                className="h-5 w-5"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjDxrf6cMv0wjBYrrRyb30-tCR0f2hrg_aPoDcZu3ti127IrWwHxUH4evncAAFzxhu32G95dYnhB0xydyscVLS1PFHQZGQwWWZoOx1LW0Wzb-pios4W22gUh3-Jt5q19T8qMh9fi7VLcEXdNCeUE9E3EHxCLWIe5U7lYMIv3bw21Mz5L_b7hwegZZePHrci0vFeztFjSyWsp0frrIpB95uL5qvmjw-WxdNb8p_R2tYk4tKkSwNfqlMGuYtfepvNFutcFCAbEb8o2I"
               />
               Microsoft
@@ -422,8 +499,8 @@ const Auth = ({ activeTab, setActiveTab, onLogin, onRegister, loading }) => {
           {/* Footer */}
           <footer className="mt-8 text-center">
             <p className="text-xs text-gray-500 dark:text-gray-500">
-              By signing in, you agree to our 
-              <a className="font-bold text-[#007bff] hover:underline" href="#"> Terms of Service</a> 
+              By signing in, you agree to our
+              <a className="font-bold text-[#007bff] hover:underline" href="#"> Terms of Service</a>
               {' '}and{' '}
               <a className="font-bold text-[#007bff] hover:underline" href="#">Privacy Policy</a>.
             </p>
@@ -435,4 +512,3 @@ const Auth = ({ activeTab, setActiveTab, onLogin, onRegister, loading }) => {
 };
 
 export default Auth;
-

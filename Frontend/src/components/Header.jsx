@@ -1,4 +1,9 @@
 // src/components/Header.jsx
+// top header
+// displaying search bar
+// displaying notifications
+// displaying user profile
+// displaying logout button 
 
 const Header = ({ currentUser, onLogout, onSearch }) => {
   return (

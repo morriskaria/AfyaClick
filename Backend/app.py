@@ -32,6 +32,14 @@ migrate = Migrate(app, db)
 def hello():
     return 'Afyyaclick system is running'
 
+#route to check health of the API
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'message': 'API is up and running'
+    })
+
 @app.route('/patients', methods=['GET'])
 def get_all_patients():
     try:
@@ -228,31 +236,6 @@ def update_doctor(doctor_id):
             'error': str(e)
         }), 400
 # Delete a doctor
-@app.route('/doctors/<string:doctor_id>', methods=['DELETE'])
-def delete_doctor(doctor_id):
-    try:
-        doctor = Doctor.query.filter_by(doctor_id=doctor_id).first()
-        
-        if not doctor:
-            return jsonify({
-                'success': False,
-                'error': 'Doctor not found'
-            }), 404
-            
-        db.session.delete(doctor)
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Doctor deleted successfully'
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 400
 
     
 
@@ -284,6 +267,26 @@ def create_appointment():
                 'status': new_appointment.status
             }
         }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+        #route to delete all users
+@app.route('/delete_all_users', methods=['DELETE'])
+def delete_all_users():
+    try:
+        num_patients_deleted = Patient.query.delete()
+        num_doctors_deleted = Doctor.query.delete()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Deleted {num_patients_deleted} patients and {num_doctors_deleted} doctors'
+        })
         
     except Exception as e:
         db.session.rollback()
@@ -336,6 +339,15 @@ def login():
             'success': False,
             'error': str(e)
         }), 400
+
+
+        #route to check if user is logged in (for testing purposes)
+@app.route('/check_login', methods=['GET'])
+def check_login():
+    return jsonify({
+        'success': True,
+        'message': 'User is logged in (this is a placeholder endpoint)'
+    })  
 
 if __name__ == '__main__':
     app.run(debug=True)

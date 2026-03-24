@@ -112,136 +112,99 @@ const App = () => {
   };
 
   const handleLogin = async (loginData) => {
+    setLoading(true);
     try {
-      setLoading(true);
-
       // Try backend login first
-      console.log('Attempting backend login for:', loginData.email);
       const backendResponse = await api.login(loginData.email, loginData.password);
-      console.log('Backend response:', backendResponse);
 
       if (backendResponse.success) {
         const backendUser = backendResponse.user;
-        // Ensure we have a role to drive navigation
         const role = backendUser.role || backendUser.user_type || 'patient';
-        console.log('Login successful, setting user:', backendUser);
-
-        // Set user and navigate to appropriate dashboard
-        const userData = { ...backendUser, role };
+        // Build a unified user object with a 'name' field always present
+        const userData = {
+          ...backendUser,
+          role,
+          name: backendUser.name || `${backendUser.first_name || ''} ${backendUser.last_name || ''}`.trim() || backendUser.email
+        };
         setCurrentUser(userData);
         setActiveTab(getDefaultTabForRole(role));
-
-        // Force a re-render by updating loading state
-        setTimeout(() => setLoading(false), 10);
-
-        console.log('User set to:', userData);
-        console.log('Active tab set to:', getDefaultTabForRole(role));
-        console.log('currentUser should now be set, app should redirect to dashboard');
-
         return;
       }
 
-      // Backend login failed, fallback to local users list
-      console.log('Backend login failed:', backendResponse.error);
-      const localUser = users.find(
-        (u) => u.email === loginData.email && u.password === loginData.password
-      );
-      if (localUser) {
-        const role = localUser.role || 'patient';
-        setCurrentUser(localUser);
-        setActiveTab(getDefaultTabForRole(role));
-
-        // Force a re-render
-        setTimeout(() => setLoading(false), 10);
-
-        // User successfully logged in and navigated to dashboard
-
-        return;
-      }
-      alert(`Login failed: ${backendResponse.error || 'Invalid credentials'}`);
+      // Backend login failed — throw so the form shows the error inline
+      throw new Error(backendResponse.error || 'Invalid email or password.');
 
     } catch (error) {
-      console.error('Login error:', error);
-      alert('Login failed: Backend server not available. Please make sure the backend is running.');
+      setLoading(false);
+      throw error; // Re-throw so LoginForm can catch and display it
     } finally {
       setLoading(false);
     }
   };
 
   const handleRegister = async (registerData) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      
       if (users.find(u => u.email === registerData.email)) {
-        alert('Email already exists');
-        return;
+        throw new Error('An account with this email already exists.');
       }
-      
-      // Register in backend based on role
-      console.log('Registering with data:', registerData);
+
       if (registerData.role === 'patient') {
-        const patientData = {
+        const result = await api.registerPatient({
           name: registerData.name,
           email: registerData.email,
           phone: registerData.phone,
           password: registerData.password
-        };
-        
-        const result = await api.registerPatient(patientData);
-        console.log('Patient registration API result:', result);
+        });
+
         if (result.success) {
           const newUser = {
             id: result.patient.id,
-            // Ensure first_name and last_name are correctly extracted from name
+            name: registerData.name,
             first_name: registerData.name.split(' ')[0],
             last_name: registerData.name.split(' ').slice(1).join(' ') || '',
             email: registerData.email,
             phone: registerData.phone,
-            role: 'patient' // Explicitly set role
+            role: 'patient'
           };
-          setUsers([...users, newUser]);
-          // Auto-login and redirect to the correct dashboard
+          setUsers(prev => [...prev, newUser]);
           setCurrentUser(newUser);
-          setActiveTab(getDefaultTabForRole(newUser.role));
-          console.log('Patient registered and logged in:', newUser);
+          setActiveTab(getDefaultTabForRole('patient'));
+          return;
         } else {
-          alert('Registration failed: ' + result.error);
-          console.error('Patient registration failed:', result.error);
+          throw new Error(result.error || 'Patient registration failed.');
         }
+
       } else if (registerData.role === 'doctor') {
-        const doctorData = {
+        const result = await api.registerDoctor({
           name: registerData.name,
-          specialty: registerData.role === 'doctor' ? 'General Practice' : registerData.specialty,
+          specialty: 'General Practice',
           email: registerData.email,
           phone: registerData.phone,
           password: registerData.password
-        };
-        
-        const result = await api.registerDoctor(doctorData);
-        console.log('Doctor registration API result:', result);
+        });
+
         if (result.success) {
           const newUser = {
             id: result.doctor.doctor_id,
             name: registerData.name,
             email: registerData.email,
             phone: registerData.phone,
-            role: 'doctor', // Explicitly set role
-            specialty: registerData.specialty
+            role: 'doctor',
+            specialty: 'General Practice'
           };
-          setUsers([...users, newUser]);
-          // Auto-login and redirect to the correct dashboard
+          setUsers(prev => [...prev, newUser]);
           setCurrentUser(newUser);
-          setActiveTab(getDefaultTabForRole(newUser.role));
-          console.log('Doctor registered and logged in:', newUser);
+          setActiveTab(getDefaultTabForRole('doctor'));
+          return;
         } else {
-          alert('Registration failed: ' + result.error);
-          console.error('Doctor registration failed:', result.error);
+          throw new Error(result.error || 'Doctor registration failed.');
         }
       }
-      
+
     } catch (error) {
-      console.error('Registration error:', error);
-      alert('Registration failed: ' + error.message);
+      setLoading(false);
+      throw error; // Re-throw so RegisterForm can catch and display it
     } finally {
       setLoading(false);
     }

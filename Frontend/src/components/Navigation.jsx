@@ -21,8 +21,8 @@ const Navigation = ({ currentUser, activeTab, setActiveTab }) => {
     <aside className="w-64 bg-white dark:bg-slate-900 border-r border-[#dae0e7] flex flex-col justify-between h-full">
       <div className="p-6">
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-10">
-          <img src="/src/assets/Affyaclicklogo.png" alt="AfyaClick Logo" className="h-10 object-contain" />
+        <div className="flex items-center gap-2 mb-8">
+          <img src="/src/assets/Affyaclicklogo.png" alt="AfyaClick Logo" className="h-20 object-contain" />
         </div>
 
         {/* Navigation Links */}
