@@ -1,4 +1,14 @@
 // src/components/MedicalRecords.jsx
+// displaying medical records
+// displaying diagnosis and treatment plan
+// displaying clinical notes
+// displaying date and time
+// displaying patient name
+// displaying doctor name
+// displaying patient id
+// displaying doctor id
+// displaying patient phone number
+// displaying doctor phone number
 import { FileText } from 'lucide-react';
 
 const MedicalRecords = ({ records }) => {

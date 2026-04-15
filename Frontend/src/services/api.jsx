@@ -50,6 +50,22 @@ export const api = {
     return response.json();
   },
 
+  async registerReceptionist(data) {
+    const response = await fetch(`${BASE_URL}/receptionists`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: data.name,
+        email: data.email,
+        phone: data.phone || '',
+        password: data.password,
+      }),
+    });
+    return response.json();
+  },
+
   // Data fetching endpoints
   async getPatients() {
     const response = await fetch(`${BASE_URL}/patients`);
@@ -82,6 +98,13 @@ export const api = {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(appointmentData),
+    });
+    return response.json();
+  },
+
+  async deleteAppointment(appointmentId) {
+    const response = await fetch(`${BASE_URL}/appointments/${appointmentId}`, {
+      method: 'DELETE',
     });
     return response.json();
   },

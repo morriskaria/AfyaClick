@@ -205,6 +205,18 @@ const RegisterForm = ({ onRegister, loading }) => {
               value="doctor"
             />
           </label>
+          <label className="flex cursor-pointer h-full grow items-center justify-center rounded-lg px-4 transition-all has-[:checked]:bg-white dark:has-[:checked]:bg-gray-700 has-[:checked]:shadow-sm has-[:checked]:text-[#007bff] text-gray-500 text-sm font-semibold">
+            <span className="material-symbols-outlined text-lg mr-2">person_raised_hand</span>
+            <span>Receptionist</span>
+            <input
+              checked={formData.role === 'receptionist'}
+              className="hidden"
+              name="role"
+              onChange={handleChange}
+              type="radio"
+              value="receptionist"
+            />
+          </label>
         </div>
       </div>
 

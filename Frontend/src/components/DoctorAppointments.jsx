@@ -1,4 +1,9 @@
 // src/components/DoctorAppointments.jsx
+// doctor appointments
+// displaying patient appointments
+// confirming or cancelling appointments
+
+
 import { Calendar, CheckCircle, XCircle } from 'lucide-react';
 
 const DoctorAppointments = ({ appointments, getPatientName, onUpdateAppointmentStatus }) => {

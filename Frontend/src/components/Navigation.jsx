@@ -11,11 +11,22 @@ const Navigation = ({ currentUser, activeTab, setActiveTab }) => {
   const doctorNavItems = [
     { id: 'dashboard', icon: 'dashboard', label: 'Dashboard' },
     { id: 'doctor-appointments', icon: 'calendar_today', label: 'Appointments' },
-    { id: 'view-records', icon: 'group', label: 'Patients' },
+    { id: 'view-patients', icon: 'group', label: 'Patients' },
     { id: 'add-record', icon: 'add_box', label: 'Add Record' },
   ];
 
-  const navItems = currentUser.role === 'patient' ? patientNavItems : doctorNavItems;
+  const receptionistNavItems = [
+    { id: 'dashboard', icon: 'dashboard', label: 'Dashboard' },
+    { id: 'receptionist-book', icon: 'event_available', label: 'Book Appointment' },
+    { id: 'receptionist-appointments', icon: 'event', label: 'Appointments' },
+  ];
+
+  const navItems =
+    currentUser.role === 'patient'
+      ? patientNavItems
+      : currentUser.role === 'receptionist'
+        ? receptionistNavItems
+        : doctorNavItems;
 
   return (
     <aside className="w-64 bg-white dark:bg-slate-900 border-r border-[#dae0e7] flex flex-col justify-between h-full">

@@ -1,4 +1,11 @@
-import React from 'react';
+// doctor dashboard
+// displaying doctor's appointments
+// displaying patient's appointments
+// displaying medical records
+// displaying patient records
+// displaying doctor records
+// displaying patient records
+import React, { useState } from 'react';
 
 // Import actual components
 import BookAppointment from './BookAppointment';
@@ -7,6 +14,8 @@ import MedicalRecords from './MedicalRecords';
 import DoctorAppointments from './DoctorAppointments';
 import AddRecord from './AddRecord';
 import ViewRecords from './ViewRecords';
+import ReceptionistBookAppointment from './ReceptionistBookAppointment';
+import ReceptionistAppointments from './ReceptionistAppointments';
 
 // Main Dashboard Component
 const Dashboard = ({
@@ -16,10 +25,14 @@ const Dashboard = ({
   appointments,
   patientRecords,
   onBookAppointment,
+  onDeleteAppointment,
   onAddRecord,
   onUpdateAppointmentStatus,
-  searchQuery
+  searchQuery,
+  onTabChange,
+  onDeletePatient
 }) => {
+  const [expandedPatientId, setExpandedPatientId] = useState(null);
   const getPatientName = (id) => users?.find(u => u.id === id)?.name || 'Unknown';
   const getDoctorName = (id) => users?.find(u => u.id === id)?.name || 'Unknown';
 
@@ -154,14 +167,14 @@ const Dashboard = ({
               <div className="grid grid-cols-2 gap-3">
                 <button 
                   className="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-[#dae0e7] rounded-xl hover:border-primary hover:text-primary transition-all group"
-                  onClick={() => {}}
+                  onClick={() => onTabChange && onTabChange('add-record')}
                 >
                   <span className="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">add_box</span>
                   <span className="text-xs font-bold text-center">Add Patient Record</span>
                 </button>
                 <button 
                   className="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-[#dae0e7] rounded-xl hover:border-primary hover:text-primary transition-all group"
-                  onClick={() => {}}
+                  onClick={() => onTabChange && onTabChange('view-patients')}
                 >
                   <span className="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">group</span>
                   <span className="text-xs font-bold text-center">View All Patients</span>
@@ -370,6 +383,61 @@ const Dashboard = ({
     );
   }
 
+  // Receptionist Dashboard Content
+  if (currentUser.role === 'receptionist' && activeTab === 'dashboard') {
+    const allAppointments = appointments || [];
+    const today = new Date().toISOString().split('T')[0];
+    const todayCount = allAppointments.filter((a) => a.date === today).length;
+    const upcomingCount = allAppointments.filter((a) => (a.date || '') >= today).length;
+
+    return (
+      <div className="space-y-8">
+        <section>
+          <div className="mb-6">
+            <h2 className="text-3xl font-black tracking-tight">Welcome back, {currentUser.name}</h2>
+            <p className="text-[#5e758d] mt-1">
+              You have {todayCount} appointments today and {upcomingCount} upcoming.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-6 rounded-xl border border-[#dae0e7] shadow-sm">
+              <p className="text-[#5e758d] text-sm font-medium">Today's Appointments</p>
+              <p className="text-2xl font-bold mt-1">{todayCount}</p>
+            </div>
+            <div className="bg-white p-6 rounded-xl border border-[#dae0e7] shadow-sm">
+              <p className="text-[#5e758d] text-sm font-medium">Upcoming</p>
+              <p className="text-2xl font-bold mt-1">{upcomingCount}</p>
+            </div>
+            <div className="bg-white p-6 rounded-xl border border-[#dae0e7] shadow-sm">
+              <p className="text-[#5e758d] text-sm font-medium">Total Appointments</p>
+              <p className="text-2xl font-bold mt-1">{allAppointments.length}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-white rounded-xl border border-[#dae0e7] shadow-sm p-6">
+          <h3 className="font-bold text-lg mb-4">Quick Actions</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-primary text-white font-bold hover:bg-primary/90 transition-colors"
+              onClick={() => onTabChange && onTabChange('receptionist-book')}
+            >
+              <span className="material-symbols-outlined">event_available</span>
+              Book Appointment
+            </button>
+            <button
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors"
+              onClick={() => onTabChange && onTabChange('receptionist-appointments')}
+            >
+              <span className="material-symbols-outlined">event</span>
+              Manage Appointments
+            </button>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   // Render content for other tabs
   const renderContent = () => {
     switch (activeTab) {
@@ -433,6 +501,105 @@ const Dashboard = ({
                 <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">stethoscope</span>
                 <h3 className="text-xl font-semibold mb-2">No Appointments</h3>
                 <p className="text-[#5e758d]">You don't have any patient appointments scheduled.</p>
+              </div>
+            )}
+          </div>
+        );
+      case 'receptionist-book':
+        return (
+          <ReceptionistBookAppointment
+            doctors={users?.filter((u) => u.role === 'doctor') || []}
+            patients={users?.filter((u) => u.role === 'patient') || []}
+            onBookAppointment={onBookAppointment}
+          />
+        );
+      case 'receptionist-appointments':
+        return (
+          <ReceptionistAppointments
+            appointments={appointments || []}
+            doctors={users?.filter((u) => u.role === 'doctor') || []}
+            patients={users?.filter((u) => u.role === 'patient') || []}
+            onDeleteAppointment={onDeleteAppointment}
+          />
+        );
+      case 'view-patients':
+        return (
+          <div className="py-6">
+            <h2 className="text-2xl font-bold mb-6">All Patients</h2>
+            {users?.filter(u => u.role === 'patient').length > 0 ? (
+              <div className="bg-white rounded-xl border border-[#dae0e7] shadow-sm">
+                <div className="px-6 py-4 border-b border-[#dae0e7] flex items-center justify-between">
+                  <p className="text-sm text-[#5e758d]">
+                    {users.filter(u => u.role === 'patient').length} patients found
+                  </p>
+                </div>
+                <div className="divide-y divide-[#dae0e7]">
+                  {users
+                    .filter(u => u.role === 'patient')
+                    .map(patient => (
+                      <div
+                        key={patient.id}
+                        className="px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
+                            <img
+                              className="w-full h-full object-cover"
+                              alt={patient.name}
+                              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(patient.name || patient.email)}&background=137fec&color=fff&size=40`}
+                            />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">{patient.name || 'Unnamed patient'}</p>
+                            <p className="text-xs text-[#5e758d]">{patient.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="px-3 py-1.5 text-xs font-bold rounded-lg border border-[#dae0e7] text-[#5e758d] hover:bg-slate-100 transition-colors"
+                            onClick={() =>
+                              setExpandedPatientId(
+                                expandedPatientId === patient.id ? null : patient.id
+                              )
+                            }
+                          >
+                            {expandedPatientId === patient.id ? 'Hide info' : 'More info'}
+                          </button>
+                          <button
+                            className="px-3 py-1.5 text-xs font-bold rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                            onClick={async () => {
+                              if (
+                                window.confirm(
+                                  `Delete patient ${patient.name || patient.email}? This cannot be undone.`
+                                )
+                              ) {
+                                await onDeletePatient?.(patient.id);
+                              }
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                        {expandedPatientId === patient.id && (
+                          <div className="mt-3 px-3 py-2 bg-slate-50 rounded-lg text-xs text-[#5e758d]">
+                            <p><span className="font-semibold">Email:</span> {patient.email}</p>
+                            {patient.phone && (
+                              <p><span className="font-semibold">Phone:</span> {patient.phone}</p>
+                            )}
+                            {patient.dob && (
+                              <p><span className="font-semibold">Date of Birth:</span> {patient.dob}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl border border-[#dae0e7] shadow-sm p-12 text-center">
+                <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">group</span>
+                <h3 className="text-xl font-semibold mb-2">No Patients Found</h3>
+                <p className="text-[#5e758d]">Patients will appear here once they register or are added to the system.</p>
               </div>
             )}
           </div>

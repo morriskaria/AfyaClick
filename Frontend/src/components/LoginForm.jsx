@@ -1,4 +1,14 @@
 // src/components/LoginForm.jsx
+// login form
+// entering email and password
+// submitting login
+// displaying error message
+// displaying loading state
+// displaying login button
+// displaying remember me checkbox
+// displaying forgot password link
+// displaying login button
+// displaying login button
 import { useState } from 'react';
 
 const LoginForm = ({ onLogin, loading }) => {

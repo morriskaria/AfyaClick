@@ -6,12 +6,13 @@ from ai_routes import ai_bp
 from ai_config import AIConfig, setup_audit_logging
 
 # Import from models
-from models import db, bcrypt, Patient, Doctor, Appointment
+from models import db, bcrypt, Patient, Doctor, Appointment, Receptionist
 from ai_models import NoteInterpretation, ChatSession, ChatMessage, AIAuditLog
 
 # Flask application object 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"])
+# Relaxed CORS for local development so frontend can always reach the API
+CORS(app, resources={r"/*": {"origins": "*"}})
 AIConfig.validate()
 setup_audit_logging()
 app.register_blueprint(ai_bp, url_prefix='/api/ai')
@@ -49,6 +50,8 @@ def get_all_patients():
             """Safely convert patient to dict without recursion"""
             return {
                 'id': patient.id,
+                'first_name': patient.first_name,
+                'last_name': patient.last_name,
                 'email': patient.email,
                 'phone': patient.phone
                 # Don't include relationships that might cause recursion
@@ -96,6 +99,53 @@ def create_patient():
             }
         }), 201
         
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+#get all receptionists
+@app.route('/receptionists', methods=['GET'])
+def get_all_receptionists():
+    try:
+        receptionists = Receptionist.query.all()
+        return jsonify({
+            'success': True,
+            'count': len(receptionists),
+            'receptionists': [receptionist.to_dict() for receptionist in receptionists]
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/receptionists', methods=['POST'])
+def create_receptionist():
+    try:
+        data = request.get_json()
+
+        new_receptionist = Receptionist(
+            name=data.get('name', ''),
+            email=data.get('email'),
+            phone=data.get('phone', '')
+        )
+        new_receptionist.set_password(data.get('password', 'password123'))
+
+        db.session.add(new_receptionist)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Receptionist created successfully',
+            'receptionist': {
+                'id': new_receptionist.id,
+                'name': new_receptionist.name,
+                'email': new_receptionist.email
+            }
+        }), 201
+
     except Exception as e:
         db.session.rollback()
         return jsonify({
@@ -326,6 +376,19 @@ def login():
                     'name': doctor.name,
                     'role': 'doctor',
                     'specialty': doctor.specialization
+                }
+            })
+
+        # Check if user exists as receptionist
+        receptionist = Receptionist.query.filter_by(email=email).first()
+        if receptionist and receptionist.check_password(password):
+            return jsonify({
+                'success': True,
+                'user': {
+                    'id': receptionist.id,
+                    'email': receptionist.email,
+                    'name': receptionist.name,
+                    'role': 'receptionist'
                 }
             })
 

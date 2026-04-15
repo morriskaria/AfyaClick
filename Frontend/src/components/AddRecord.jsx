@@ -1,3 +1,12 @@
+//adding medical record
+// selecting patient
+// entering diagnosis and treatment plan
+// writing clinical notes
+// using AI interpreter
+// approving and saving interpretation
+// submitting record
+
+
 import React, { useState } from 'react';
 import { FileText, User, Stethoscope, FileCheck, ClipboardList } from 'lucide-react';
 import NoteAISummaryPanel from './NoteAISummaryPanel';
@@ -36,7 +45,7 @@ const AddRecord = ({ patients, onAddRecord }) => {
             <div className="bg-white p-3 rounded-full">
               <FileText className="w-7 h-7 text-blue-600" />
             </div>
-            <h2 className="text-3xl font-bold text-white">Add Patient Record</h2>
+            <h2 className="text-3xl font-bold text-white bg-black">Add Patient Record</h2>
           </div>
           <p className="text-blue-100 ml-16">Complete the form below to add a new medical record</p>
         </div>
@@ -150,15 +159,19 @@ const AddRecord = ({ patients, onAddRecord }) => {
             <div className="pt-4">
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   if (formData.patientId && formData.diagnosis && formData.treatment && formData.notes) {
-                    onAddRecord(formData);
-                    setFormData({ patientId: '', diagnosis: '', treatment: '', notes: '' });
+                    const ok = await onAddRecord(formData);
+                    if (ok) {
+                      setFormData({ patientId: '', diagnosis: '', treatment: '', notes: '' });
+                      setShowAIPanel(false);
+                      setAiInterpretation(null);
+                    }
                   } else {
                     alert('Please fill in all required fields');
                   }
                 }}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-blue-700 hover:to-blue-800 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 bg-black text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-blue-700 hover:to-blue-800 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
               >
                 <FileText className="w-5 h-5" />
                 Add Medical Record
@@ -186,32 +199,4 @@ const AddRecord = ({ patients, onAddRecord }) => {
   );
 };
 
-// Demo wrapper to show the component in action
-const AddRecordDemo = () => {
-  const [records, setRecords] = useState([]);
-  
-  const mockPatients = [
-    { id: 1, name: 'John Smith' },
-    { id: 2, name: 'Sarah Johnson' },
-    { id: 3, name: 'Michael Brown' },
-    { id: 4, name: 'Emily Davis' },
-  ];
-
-  const handleAddRecord = (formData) => {
-    const newRecord = {
-      id: records.length + 1,
-      ...formData,
-      date: new Date().toLocaleDateString(),
-    };
-    setRecords([...records, newRecord]);
-    alert('Record added successfully!');
-  };
-
-  return (
-    <div className="bg-gray-100 min-h-screen">
-      <AddRecord patients={mockPatients} onAddRecord={handleAddRecord} />
-    </div>
-  );
-};
-
-export default AddRecordDemo;
+export default AddRecord;

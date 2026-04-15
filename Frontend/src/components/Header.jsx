@@ -5,7 +5,12 @@
 // displaying user profile
 // displaying logout button 
 
-const Header = ({ currentUser, onLogout, onSearch }) => {
+const Header = ({ currentUser, onLogout, onSearch, notifications = [], onMarkAllRead }) => {
+  const userNotifications = notifications.filter(
+    (n) =>
+      !n.forUserId || !currentUser || n.forUserId === currentUser.id
+  );
+  const unreadCount = userNotifications.filter(n => !n.read).length;
   return (
     <header className="bg-white border-b border-[#dae0e7] px-8 py-4 flex items-center justify-between">
       {/* Search Bar */}
@@ -25,10 +30,54 @@ const Header = ({ currentUser, onLogout, onSearch }) => {
       <div className="flex items-center gap-6">
         {/* Notifications */}
         <div className="flex items-center gap-2">
-          <button className="p-2 text-[#5e758d] hover:bg-slate-100 rounded-lg relative">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
+          <div className="relative">
+            <button
+              className="p-2 text-[#5e758d] hover:bg-slate-100 rounded-lg relative"
+              aria-label="Notifications"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <span className="material-symbols-outlined">notifications</span>
+              {unreadCount > 0 && (
+                <span className="absolute top-2 right-2.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-[10px] leading-[14px] text-white rounded-full border-2 border-white flex items-center justify-center font-bold">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+            {userNotifications.length > 0 && (
+              <div className="absolute right-0 mt-2 w-80 bg-white border border-[#dae0e7] rounded-lg shadow-lg z-20">
+                <div className="px-4 py-2 flex items-center justify-between border-b border-[#dae0e7]">
+                  <span className="text-xs font-bold text-[#5e758d] uppercase tracking-wide">
+                    Notifications
+                  </span>
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      className="text-[11px] font-semibold text-primary hover:underline"
+                      onClick={onMarkAllRead}
+                    >
+                      Mark all as read
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {userNotifications.map((n) => (
+                    <div
+                      key={n.id}
+                      className={`px-4 py-2 text-xs border-b border-[#f1f4f8] last:border-b-0 ${
+                        n.read ? 'bg-white' : 'bg-primary/5'
+                      }`}
+                    >
+                      <p className="font-medium text-gray-800">{n.message}</p>
+                      <p className="text-[10px] text-[#9aa7b8] mt-1">
+                        {new Date(n.timestamp).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <button className="p-2 text-[#5e758d] hover:bg-slate-100 rounded-lg">
             <span className="material-symbols-outlined">help</span>
           </button>

@@ -28,6 +28,7 @@ const App = () => {
   const [patientRecords, setPatientRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [notifications, setNotifications] = useState([]);
 
   // Load initial data from backend
   useEffect(() => {
@@ -47,7 +48,7 @@ const App = () => {
   const loadInitialData = async () => {
     try {
       // Load doctors and patients from backend
-      const [doctorsRes, , appointmentsRes] = await Promise.all([
+      const [doctorsRes, patientsRes, appointmentsRes] = await Promise.all([
         api.getDoctors(),
         api.getPatients(),
         api.getAppointments()
@@ -69,7 +70,18 @@ const App = () => {
           { id: 2, email: 'patient@hospital.com', password: 'pat123', role: 'patient', name: 'John Doe', dob: '1990-05-15' }
         ];
         
-        setUsers([...demoUsers, ...backendDoctors]);
+        const backendPatients =
+          patientsRes?.success && Array.isArray(patientsRes.patients)
+            ? patientsRes.patients.map((p) => ({
+                id: p.id,
+                email: p.email,
+                phone: p.phone,
+                role: 'patient',
+                name: `${p.first_name || ''} ${p.last_name || ''}`.trim() || p.email || `Patient #${p.id}`,
+              }))
+            : [];
+
+        setUsers([...demoUsers, ...backendDoctors, ...backendPatients]);
       }
 
       if (appointmentsRes.success) {
@@ -201,6 +213,30 @@ const App = () => {
           throw new Error(result.error || 'Doctor registration failed.');
         }
       }
+      else if (registerData.role === 'receptionist') {
+        const result = await api.registerReceptionist({
+          name: registerData.name,
+          email: registerData.email,
+          phone: registerData.phone,
+          password: registerData.password
+        });
+
+        if (result.success) {
+          const newUser = {
+            id: result.receptionist.id,
+            name: registerData.name,
+            email: registerData.email,
+            phone: registerData.phone,
+            role: 'receptionist'
+          };
+          setUsers(prev => [...prev, newUser]);
+          setCurrentUser(newUser);
+          setActiveTab(getDefaultTabForRole('receptionist'));
+          return;
+        } else {
+          throw new Error(result.error || 'Receptionist registration failed.');
+        }
+      }
 
     } catch (error) {
       setLoading(false);
@@ -212,10 +248,20 @@ const App = () => {
 
   const handleBookAppointment = async (appointmentData) => {
     try {
+      const patientId =
+        currentUser?.role === 'receptionist'
+          ? parseInt(appointmentData.patientId)
+          : currentUser.id;
+
+      if (!patientId) {
+        alert('Please select a patient.');
+        return false;
+      }
+
       // Send to backend
       const backendAppointment = {
-        patient_id: currentUser.id,
-        doctor_id: appointmentData.doctorId.toString(),
+        patient_id: patientId,
+        doctor_id: appointmentData.doctorId?.toString(),
         appointment_date: appointmentData.date,
         appointment_time: appointmentData.time,
         status: 'Scheduled'
@@ -227,12 +273,38 @@ const App = () => {
         // Also update local state
         const newAppointment = {
           id: result.appointment.id,
-          patientId: currentUser.id,
           ...appointmentData,
-          doctorId: parseInt(appointmentData.doctorId),
+          patientId,
+          doctorId: appointmentData.doctorId?.toString(),
           status: 'pending'
         };
         setAppointments([...appointments, newAppointment]);
+        const now = new Date().toISOString();
+        const patientName =
+          users.find((u) => u.role === 'patient' && u.id === patientId)?.name || `patient #${patientId}`;
+        const doctorName =
+          users.find((u) => u.role === 'doctor' && String(u.id) === String(newAppointment.doctorId))?.name ||
+          `doctor ${newAppointment.doctorId}`;
+
+        setNotifications((prev) => [
+          {
+            id: Date.now(),
+            type: 'appointment',
+            message: `New appointment scheduled for ${patientName} with Dr. ${doctorName}`,
+            timestamp: now,
+            read: false,
+            forUserId: newAppointment.doctorId,
+          },
+          {
+            id: Date.now() + 1,
+            type: 'appointment',
+            message: `Your appointment with Dr. ${doctorName} was scheduled for ${newAppointment.date} at ${newAppointment.time}`,
+            timestamp: now,
+            read: false,
+            forUserId: patientId,
+          },
+          ...prev,
+        ]);
         alert('Appointment booked successfully!');
         return true;
       } else {
@@ -243,14 +315,90 @@ const App = () => {
       // Fallback to local state
       const newAppointment = {
         id: appointments.length + 1,
-        patientId: currentUser.id,
+        patientId:
+          currentUser?.role === 'receptionist'
+            ? parseInt(appointmentData.patientId)
+            : currentUser.id,
         ...appointmentData,
-        doctorId: parseInt(appointmentData.doctorId),
+        doctorId: appointmentData.doctorId?.toString(),
         status: 'pending'
       };
       setAppointments([...appointments, newAppointment]);
+      const now = new Date().toISOString();
+      const patientName =
+        users.find((u) => u.role === 'patient' && u.id === newAppointment.patientId)?.name ||
+        `patient #${newAppointment.patientId}`;
+      const doctorName =
+        users.find((u) => u.role === 'doctor' && String(u.id) === String(newAppointment.doctorId))?.name ||
+        `doctor ${newAppointment.doctorId}`;
+
+      setNotifications((prev) => [
+        {
+          id: Date.now(),
+          type: 'appointment',
+          message: `New appointment scheduled for ${patientName} with Dr. ${doctorName}`,
+          timestamp: now,
+          read: false,
+          forUserId: newAppointment.doctorId,
+        },
+        {
+          id: Date.now() + 1,
+          type: 'appointment',
+          message: `Your appointment with Dr. ${doctorName} was scheduled for ${newAppointment.date} at ${newAppointment.time}`,
+          timestamp: now,
+          read: false,
+          forUserId: newAppointment.patientId,
+        },
+        ...prev,
+      ]);
       alert('Appointment booked successfully! (Local storage)');
       return true;
+    }
+  };
+
+  const handleDeleteAppointment = async (appointmentId) => {
+    const apt = appointments.find((a) => a.id === appointmentId);
+    if (!apt) return false;
+
+    try {
+      const result = await api.deleteAppointment(appointmentId);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete appointment');
+      }
+
+      setAppointments((prev) => prev.filter((a) => a.id !== appointmentId));
+
+      const now = new Date().toISOString();
+      const patientName =
+        users.find((u) => u.role === 'patient' && u.id === apt.patientId)?.name || `patient #${apt.patientId}`;
+      const doctorName =
+        users.find((u) => u.role === 'doctor' && String(u.id) === String(apt.doctorId))?.name ||
+        `doctor ${apt.doctorId}`;
+
+      setNotifications((prev) => [
+        {
+          id: Date.now(),
+          type: 'appointment',
+          message: `Appointment for ${patientName} on ${apt.date} at ${apt.time} was cancelled`,
+          timestamp: now,
+          read: false,
+          forUserId: apt.doctorId,
+        },
+        {
+          id: Date.now() + 1,
+          type: 'appointment',
+          message: `Your appointment with Dr. ${doctorName} on ${apt.date} at ${apt.time} was cancelled`,
+          timestamp: now,
+          read: false,
+          forUserId: apt.patientId,
+        },
+        ...prev,
+      ]);
+
+      return true;
+    } catch (error) {
+      alert('Failed to delete appointment: ' + error.message);
+      return false;
     }
   };
 
@@ -263,6 +411,17 @@ const App = () => {
         date: new Date().toISOString().split('T')[0]
       };
       setPatientRecords([...patientRecords, newRecord]);
+      setNotifications(prev => [
+        {
+          id: Date.now(),
+          type: 'record',
+          message: `New record added for patient #${newRecord.patientId}`,
+          timestamp: new Date().toISOString(),
+          read: false,
+          forUserId: currentUser.role === 'doctor' ? currentUser.id : undefined,
+        },
+        ...prev,
+      ]);
       alert('Patient record added successfully!');
       return true;
     } catch (error) {
@@ -317,6 +476,10 @@ const App = () => {
           currentUser={currentUser} 
           onLogout={handleLogout}
           onSearch={setSearchQuery}
+          notifications={notifications}
+          onMarkAllRead={() =>
+            setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+          }
         />
         
         {/* Scrollable Content */}
@@ -328,9 +491,24 @@ const App = () => {
             appointments={appointments}
             patientRecords={patientRecords}
             onBookAppointment={handleBookAppointment}
+            onDeleteAppointment={handleDeleteAppointment}
             onAddRecord={handleAddRecord}
             onUpdateAppointmentStatus={updateAppointmentStatus}
             searchQuery={searchQuery}
+            onTabChange={setActiveTab}
+            onDeletePatient={async (patientId) => {
+              try {
+                setUsers(prev =>
+                  prev.filter(u => !(u.role === 'patient' && u.id === patientId))
+                );
+                // TODO: wire to backend DELETE /patients/<id> when available
+                alert('Patient deleted from current session view.');
+                return true;
+              } catch (error) {
+                alert('Failed to delete patient: ' + error.message);
+                return false;
+              }
+            }}
           />
         </main>
       </div>
