@@ -135,6 +135,19 @@ def seed_database():
             'email': 'lisa.martinez@email.com',
             'phone': '+1-555-1008'
         }
+        ,  {
+            'first_name': 'James',
+            'last_name': 'Wilson',
+            'gender': 'Male',
+            'email': 'james.wilson@email.com',
+            'phone': '+1-555-1009'
+        },
+        {
+            'first_name': 'Emily',
+            'last_name': 'Taylor',
+            'gender': 'Female',
+            'email': 'emily.taylor@email.com',
+            'phone': '+1-555-1010'  
     ]
     
     patients = []

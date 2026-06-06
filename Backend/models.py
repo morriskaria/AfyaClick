@@ -3,6 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.orm import validates
+from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime
+import uuid
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -10,14 +13,18 @@ bcrypt = Bcrypt()
 class Patient(db.Model,SerializerMixin):
     __tablename__ = 'patients'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
+    date_of_birth = db.Column(db.Date, nullable=False)
     gender = db.Column(db.String(10), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    phone = db.Column(db.String(20))
+    phone = db.Column(db.String(20), nullable=True)
+    medical_record_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
-
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     
     
@@ -88,7 +95,7 @@ class Appointment(db.Model,SerializerMixin):
     __tablename__ = 'appointments'
     
     id = db.Column(db.Integer, primary_key=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
+    patient_id = db.Column(UUID(as_uuid=True), db.ForeignKey('patients.id'), nullable=False)
     doctor_id = db.Column(db.String(50), db.ForeignKey('doctors.doctor_id'), nullable=False)
     appointment_date = db.Column(db.String(50), nullable=False)
     appointment_time = db.Column(db.String(50), nullable=False)
