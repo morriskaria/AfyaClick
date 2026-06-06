@@ -5,8 +5,10 @@ import Header from './components/Header';
 import Navigation from './components/Navigation';
 import Dashboard from './components/Dashboard';
 import { api } from './services/api';
+import LandingPage from './components/LandingPage';
 import './app.css';
 import AfyaclickAssistantWidget from './components/AfyaclickAssistantWidget';
+import logo from './assets/Affyaclicklogo.png';
 
 
 // Map user roles to their default dashboard tab
@@ -23,6 +25,7 @@ const DEMO_USERS = [
 const App = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState('login');
+  const [showLanding, setShowLanding] = useState(true);
   const [users, setUsers] = useState(DEMO_USERS); // start with demo users so login works offline
   const [appointments, setAppointments] = useState([]);
   const [patientRecords, setPatientRecords] = useState([]);
@@ -30,9 +33,16 @@ const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState([]);
 
-  // Load initial data from backend
+  // Initialize App Metadata (Favicon/Title) and Load Data
   useEffect(() => {
     loadInitialData();
+    
+    // Set Favicon programmatically
+    const link = document.querySelector("link[rel~='icon']") || document.createElement('link');
+    link.rel = 'icon';
+    link.href = logo;
+    document.getElementsByTagName('head')[0].appendChild(link);
+    document.title = "AfyaClick - Modern Healthcare Management";
   }, []);
 
   // Debug currentUser state changes
@@ -448,14 +458,26 @@ const App = () => {
   };
 
   if (!currentUser) {
-    return <Auth
-      key="auth-component"
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      onLogin={handleLogin}
-      onRegister={handleRegister}
-      loading={loading}
-    />;
+    if (showLanding) {
+      return (
+        <LandingPage 
+          onGetStarted={() => {
+            setShowLanding(false);
+            setActiveTab('login');
+          }} 
+        />
+      );
+    }
+    return (
+      <Auth
+        key="auth-component"
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+        loading={loading}
+      />
+    );
   }
 
   // Main app layout with sidebar
@@ -517,4 +539,3 @@ const App = () => {
 };
 
 export default App;
-
