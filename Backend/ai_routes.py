@@ -62,36 +62,46 @@ circuit_breaker = CircuitBreaker()
 def interpret_note():
     """
     Interpret and summarize a clinical note.
-    
-    Request Body:
-    {
-        "note_id": "string",
-        "raw_note_text": "string",
-        "patient_id": "int",
-        "doctor_id": "string"
-    }
-    
-    Response (200 OK):
-    {
-        "success": true,
-        "note_interpretation": {
-            "id": 1001,
-            "note_id": "...",
-            "formatted_note": "...",
-            "clinical_summary": "...",
-            "patient_friendly_summary": "...",
-            "extracted_entities": {...},
-            "ai_metadata": {...},
-            "disclaimer": "..."
-        }
-    }
-    
-    Error Responses:
-    - 400: Bad Request (invalid input)
-    - 401: Unauthorized (missing auth)
-    - 403: Forbidden (insufficient role)
-    - 429: Too Many Requests (rate limit)
-    - 503: Service Unavailable (AI service down)
+    ---
+    tags:
+      - AI Services
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            note_id:
+              type: string
+              example: "NOTE-2024-001"
+            raw_note_text:
+              type: string
+              example: "Pt c/o dry cough x3 weeks..."
+            patient_id:
+              type: string
+              format: uuid
+            doctor_id:
+              type: string
+    responses:
+      200:
+        description: Interpretation successful
+        schema:
+          properties:
+            success:
+              type: boolean
+            note_interpretation:
+              type: object
+              properties:
+                clinical_summary:
+                  type: string
+                extracted_entities:
+                  type: object
+      429:
+        description: Rate limit exceeded
+      503:
+        description: AI service unavailable
     """
     try:
         # Extract user info from headers

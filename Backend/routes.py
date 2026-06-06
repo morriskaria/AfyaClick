@@ -16,6 +16,48 @@ def add_patient():
     """
     Add a new patient record to the system.
     Expected JSON: first_name, last_name, email, date_of_birth, gender, medical_record_number, phone, password
+    ---
+    tags:
+      - Patients
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          id: PatientInput
+          required:
+            - first_name
+            - last_name
+            - email
+            - date_of_birth
+            - medical_record_number
+            - password
+          properties:
+            first_name:
+              type: string
+            last_name:
+              type: string
+            email:
+              type: string
+            date_of_birth:
+              type: string
+              format: date
+              description: "YYYY-MM-DD"
+            gender:
+              type: string
+            medical_record_number:
+              type: string
+            phone:
+              type: string
+            password:
+              type: string
+    responses:
+      201:
+        description: Patient created successfully
+      400:
+        description: Validation error or missing fields
+      409:
+        description: Patient with email or MRN already exists
     """
     data = request.get_json()
     

@@ -4,6 +4,8 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from ai_routes import ai_bp
 from ai_config import AIConfig, setup_audit_logging
+from flasgger import Swagger
+
 
 # Import from models
 from models import db, bcrypt, Patient, Doctor, Appointment, Receptionist
@@ -11,6 +13,26 @@ from ai_models import NoteInterpretation, ChatSession, ChatMessage, AIAuditLog
 
 # Flask application object 
 app = Flask(__name__)
+
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "AfyaClick API",
+        "description": "API for AfyaClick E-Hospital System",
+        "version": "1.0.0"
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+        }
+    }
+}
+
+swagger = Swagger(app, template=swagger_template)
+
 # Relaxed CORS for local development so frontend can always reach the API
 CORS(app, resources={r"/*": {"origins": "*"}})
 AIConfig.validate()
@@ -43,6 +65,15 @@ def health_check():
 
 @app.route('/patients', methods=['GET'])
 def get_all_patients():
+    """
+    Retrieve all patients
+    ---
+    tags:
+      - Core - Patients
+    responses:
+      200:
+        description: A list of patients
+    """
     try:
         patients = Patient.query.all()
         
@@ -73,6 +104,38 @@ def get_all_patients():
 #patients registration
 @app.route('/patients', methods=['POST'])
 def create_patient():
+    """
+    Register a new patient
+    ---
+    tags:
+      - Core - Patients
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            first_name:
+              type: string
+              example: "John Doe"
+            email:
+              type: string
+              example: "john@example.com"
+            gender:
+              type: string
+              example: "Male"
+            phone:
+              type: string
+              example: "1234567890"
+            password:
+              type: string
+              example: "securepass123"
+    responses:
+      201:
+        description: Patient created successfully
+      400:
+        description: Error creating patient
+    """
     try:
         data = request.get_json()
         
@@ -347,6 +410,31 @@ def delete_all_users():
 #login endpoint
 @app.route('/login', methods=['POST'])
 def login():
+    """
+    User Login (Unified)
+    ---
+    tags:
+      - Authentication
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+              example: "doctor@hospital.com"
+            password:
+              type: string
+              example: "password123"
+    responses:
+      200:
+        description: Login successful
+      401:
+        description: Invalid credentials
+      400:
+        description: Bad request
+    """
     try:
         data = request.get_json()
         email = data.get('email')
